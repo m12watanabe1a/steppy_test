@@ -24,6 +24,9 @@ int main(void)
   std::vector<float> C_inv;
   std::vector<int32_t> t_list;
 
+  uint16_t speedup_cnt = 0;
+  uint16_t speeddown_cnt = 0;
+
   while (target_pos != current_pos)
   {
     if (delay_microsec == delay_max)
@@ -46,18 +49,22 @@ int main(void)
         : current_pos--;
 
     // update delay time
-    if (abs(diff) - 1 < speeddown_steps)
+    if (abs(diff)  < speeddown_steps)
     {
       // speed down
+      speeddown_cnt++;
       delay_microsec = delay_microsec - 2 * delay_microsec / (-4 * abs(diff) + 1);
     }
     else if (step_counter < speedup_steps)
     {
       // speed up
+      speedup_cnt++;
       delay_microsec = delay_microsec - 2 * delay_microsec / (4 * step_counter + 1);
     }
     step_counter++;
   }
+  std::cout << speedup_cnt << std::endl;
+  std::cout << speeddown_cnt << std::endl;
 
   plt::figure();
   plt::plot(t_list, C_inv);
