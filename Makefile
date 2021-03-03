@@ -1,5 +1,5 @@
 CXX      := -c++
-CXXFLAGS :=
+CXXFLAGS := -std=c++11
 LDFLAGS  := -L/usr/lib -lstdc++ -lm -lpython3.8
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
