@@ -5,41 +5,39 @@ namespace plt = matplotlibcpp;
 
 int main(void)
 {
-  int32_t target_pos = 10000;
+  int32_t target_pos = 1000;
   int32_t current_pos = 0;
 
-  const uint16_t delay_max = 8000; // 8191
-  const uint16_t delay_min = 100;  // 127
-
-  const uint16_t speedup_steps = 500;
-  const uint16_t speeddown_steps = 500;
+  const uint16_t delay_max = 400; // 8191
+  const uint16_t delay_min = 50;  // 127
 
   static uint16_t last_delay_microsec = delay_max;
   static uint32_t step_counter = 1; // counter should start from 1
   uint8_t stepping_state = 0;
-  uint8_t acc = 4;
-  uint16_t delay_microsec = delay_max;
 
-  std::vector<uint16_t> C_list;
-  std::vector<float> C_inv;
-  std::vector<int32_t> t_list;
+  std::vector<uint16_t> delta_t_list;
+  std::vector<float> V1_list;
+  std::vector<float> V2_list;
+  std::vector<float> V_max_list;
+  std::vector<float> t_list;
 
   uint16_t speedup_cnt = 0;
   uint16_t speeddown_cnt = 0;
 
+  float c = 0.6000;
+  float factor = 2.8e3;
+  uint16_t delta_t;
   while (target_pos != current_pos)
   {
-    if (delay_microsec >= delay_max)
-    {
-      step_counter = 1; // counter should start from 1
-    }
-
     int32_t diff = target_pos - current_pos;
+    delta_t = factor * c;
     //delay50:1 m/s, delay250:0.2 m/s
-    C_list.push_back(delay_microsec / acc);
-    C_inv.push_back(1.0 / delay_microsec *acc);
-    int32_t sum_of_elems = 0;
-    for (auto &n : C_list)
+
+    delta_t_list.push_back(delta_t);
+    V1_list.push_back(1.0 / delta_t);
+    V_max_list.push_back(1.0 / delay_min);
+    uint32_t sum_of_elems = 0;
+    for (auto &n : delta_t_list)
       sum_of_elems += n;
     t_list.push_back(sum_of_elems);
 
@@ -48,33 +46,20 @@ int main(void)
         ? current_pos++
         : current_pos--;
 
-    // update delay time
-    if (abs(diff) < speeddown_steps)
+    // speed up
+    if (delta_t > delay_min)
     {
-      // speed down
-      speeddown_cnt++;
-      delay_microsec = delay_microsec - 2 * delay_microsec / (-4 * abs(diff) + 1);
-    }
-    else if (step_counter < speedup_steps)
-    {
-      // speed up
       speedup_cnt++;
-      delay_microsec = delay_microsec - 2 * delay_microsec / (4 * step_counter + 1);
+      c = c - 2.0 * c / (4.0 * step_counter + 1.0);
     }
+
     step_counter++;
   }
   std::cout << speedup_cnt << std::endl;
-  std::cout << speeddown_cnt << std::endl;
-  std::cout << step_counter << std::endl;
   float v_max = 1.0 / delay_min;
 
-  plt::figure();
-  plt::grid(true);
-  // plt::xlim(0.0, 0.5e6);
-  plt::plot(t_list, C_inv);
-  std::vector<int32_t> t = {t_list.front(), t_list.back()};
-  std::vector<float> v_max_vec = {v_max, v_max};
-  plt::plot(t, v_max_vec);
+  plt::plot(t_list, V1_list, "o-b");
+  plt::plot(t_list, V_max_list);
   plt::show();
 
   return EXIT_SUCCESS;
