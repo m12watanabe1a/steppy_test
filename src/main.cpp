@@ -5,7 +5,7 @@ namespace plt = matplotlibcpp;
 
 int main(void)
 {
-  int32_t target_pos = 1000;
+  int32_t target_pos = 10000;
   int32_t current_pos = 0;
 
   const uint16_t delay_max = 400; // 8191
@@ -25,7 +25,7 @@ int main(void)
   uint16_t speeddown_cnt = 0;
 
   float c = 0.6000;
-  float factor = 2.8e3;
+  float factor = 6.0e3;
   uint16_t delta_t;
   while (target_pos != current_pos)
   {
